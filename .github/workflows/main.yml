@@ -72,7 +72,6 @@ jobs:
           sudo docker run -d \
           --name mysql \
           --network mynet \
-          -e MYSQL_USER=root \
           -e MYSQL_ROOT_PASSWORD=rootpass \
           -e MYSQL_DATABASE=student_registration \
           -e MYSQL_PASSWORD=password123 \
