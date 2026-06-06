@@ -108,21 +108,18 @@ jobs:
           script: |
 
             echo "Logging into ECR..."
-            aws ecr get-login-password --region us-east-1 | \
+            sudo aws ecr get-login-password --region us-east-1 | \
             docker login --username AWS --password-stdin 160900807677.dkr.ecr.us-east-1.amazonaws.com
 
             echo "Pulling latest images..."
-            docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/backend:latest
-            docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
+            sudo docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/backend:latest
+            sudo docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
 
-            echo "Stopping old containers..."
-            docker stop backend || true
-            docker rm backend || true
-            docker stop frontend || true
-            docker rm frontend || true
+            echo "Deleting old containers..."
+            sudo docker rm -f backend frontend || true
 
             echo "Running backend..."
-            docker run -d \
+            sudo docker run -d \
               --name backend \
               -p 5000:5000 \
               -e DB_HOST=${{ needs.deploy-infra.outputs.rds_endpoint }} \
@@ -131,7 +128,7 @@ jobs:
               160900807677.dkr.ecr.us-east-1.amazonaws.com/backend:latest
 
             echo "Running frontend..."
-            docker run -d \
+            sudo docker run -d \
               --name frontend \
               -p 80:80 \
               160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
