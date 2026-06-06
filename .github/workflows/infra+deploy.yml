@@ -123,6 +123,7 @@ jobs:
               --name backend \
               -p 5000:5000 \
               -e DB_HOST=${{ needs.deploy-infra.outputs.rds_endpoint }} \
+              -e DB_NAME=student_registration \
               -e DB_USER=root \
               -e DB_PASSWORD=password123 \
               160900807677.dkr.ecr.us-east-1.amazonaws.com/backend:latest
