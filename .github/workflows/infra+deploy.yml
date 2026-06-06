@@ -112,8 +112,8 @@ jobs:
             docker login --username AWS --password-stdin 160900807677.dkr.ecr.us-east-1.amazonaws.com
 
             echo "Pulling latest images..."
-            docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/backend-app:latest
-            docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend-app:latest
+            docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/backend:latest
+            docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
 
             echo "Stopping old containers..."
             docker stop backend || true
