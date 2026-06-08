@@ -1,7 +1,7 @@
 variable "frontend_repo_name" {
-  type = string
+  default = "frontend"
 }
 
 variable "backend_repo_name" {
-  type = string
+  default = "backend"
 }
