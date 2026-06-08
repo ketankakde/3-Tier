@@ -37,7 +37,7 @@ resource "aws_instance" "ec2" {
   subnet_id              = var.subnet_id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
-  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
+  iam_instance_profile = module.iam.instance_profile_name
 
   user_data = file("${path.module}/install_docker.sh")
 
