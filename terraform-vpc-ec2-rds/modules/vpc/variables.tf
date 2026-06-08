@@ -6,7 +6,7 @@ variable "pub_cidr" {
  default = "10.0.1.0/24"
 }
 
-vaiable "az-1" {
+variable "az-1" {
  default = "us-east-1a"
 }
 
@@ -22,6 +22,6 @@ variable "pri_2_cidr" {
  default = "10.0.3.0/24"
 }
 
-variable "az-3 {
+variable "az-3" {
  default = "us-east-1b"
 }
