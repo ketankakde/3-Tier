@@ -1,5 +1,5 @@
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.cidr_block
 
   tags = {
     Name = "demo-vpc"
@@ -8,8 +8,8 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "public" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
+  cidr_block = var.pub_cidr
+  availability_zone = var.az-1
 
   map_public_ip_on_launch = true
 
@@ -20,8 +20,8 @@ resource "aws_subnet" "public" {
 
 resource "aws_subnet" "private" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.2.0/24"
-  availability_zone = "us-east-1a"
+  cidr_block = var.pri_cidr
+  availability_zone = var.az-2
 
   tags = {
     Name = "pri-subnet"
@@ -30,8 +30,8 @@ resource "aws_subnet" "private" {
 
 resource "aws_subnet" "private_2" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-east-1b"
+  cidr_block        = var.pri_2_cidr
+  availability_zone = var.az-3
 }
 
 resource "aws_internet_gateway" "igw" {
