@@ -134,7 +134,7 @@ jobs:
 
             echo "Deleting old containers..."
             sudo docker rm -f backend frontend || true
-            sudo docker network create mynet
+            sudo docker network create mynet || true
 
             echo "Running backend..."
             sudo docker run -d \
