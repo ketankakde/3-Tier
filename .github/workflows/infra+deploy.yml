@@ -134,10 +134,12 @@ jobs:
 
             echo "Deleting old containers..."
             sudo docker rm -f backend frontend || true
+            sudo docker network create mynet
 
             echo "Running backend..."
             sudo docker run -d \
               --name backend \
+              --network mynet \
               -p 5000:5000 \
               -e DB_HOST=${{ needs.deploy-infra.outputs.rds_endpoint }} \
               -e DB_NAME=student_registration \
@@ -148,5 +150,6 @@ jobs:
             echo "Running frontend..."
             sudo docker run -d \
               --name frontend \
+              --network mynet \
               -p 80:80 \
               160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
