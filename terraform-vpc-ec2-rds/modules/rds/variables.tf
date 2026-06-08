@@ -8,7 +8,6 @@ variable "engine" {
 
 variable "engine_version" {
  default = "8.0"
- type = number
 }
 
 variable "instance_class" {
