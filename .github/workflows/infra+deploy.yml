@@ -41,119 +41,115 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
-      - name: Terraform Destroy
+      - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform destroy -auto-approve
+        run: terraform apply -auto-approve
 
-  #     - name: Terraform Apply
-  #       working-directory: ${{ env.TF_WORKING_DIR }}
-  #       run: terraform apply -auto-approve
+      - name: Print EC2 IP
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+            terraform output
+            terraform output -raw ec2_public_ip
 
-  #     - name: Print EC2 IP
-  #       working-directory: ${{ env.TF_WORKING_DIR }}
-  #       run: |
-  #           terraform output
-  #           terraform output -raw ec2_public_ip
+      - name: Get EC2 IP
+        id: get_ip
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          echo "ec2_ip=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
 
-  #     - name: Get EC2 IP
-  #       id: get_ip
-  #       working-directory: ${{ env.TF_WORKING_DIR }}
-  #       run: |
-  #         echo "ec2_ip=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
-
-  #     - name: Get RDS Endpoint
-  #       id: tf_outputs
-  #       working-directory: ${{ env.TF_WORKING_DIR }}
-  #       run: |
-  #         echo "rds_endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
+      - name: Get RDS Endpoint
+        id: tf_outputs
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          echo "rds_endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
 
 
-  # build-and-push:
-  #   name: Build & Push Docker Images
-  #   runs-on: ubuntu-latest
-  #   needs: deploy-infra
+  build-and-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    needs: deploy-infra
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  #     - name: Configure AWS Credentials (OIDC)
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         role-to-assume: arn:aws:iam::160900807677:role/role-for-github-actions
-  #         aws-region: ${{ env.AWS_REGION }}
+      - name: Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::160900807677:role/role-for-github-actions
+          aws-region: ${{ env.AWS_REGION }}
 
-  #     - name: Login to ECR
-  #       run: |
-  #         aws ecr get-login-password --region $AWS_REGION | \
-  #         docker login --username AWS --password-stdin $ECR_REGISTRY
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | \
+          docker login --username AWS --password-stdin $ECR_REGISTRY
 
-  #     - name: Build Backend Image
-  #       run: |
-  #         docker build -t $BACKEND_REPO ./backend
-  #         docker tag $BACKEND_REPO:latest $ECR_REGISTRY/$BACKEND_REPO:latest
+      - name: Build Backend Image
+        run: |
+          docker build -t $BACKEND_REPO ./backend
+          docker tag $BACKEND_REPO:latest $ECR_REGISTRY/$BACKEND_REPO:latest
 
-  #     - name: Build Frontend Image
-  #       run: |
-  #         docker build -t $FRONTEND_REPO ./frontend
-  #         docker tag $FRONTEND_REPO:latest $ECR_REGISTRY/$FRONTEND_REPO:latest
+      - name: Build Frontend Image
+        run: |
+          docker build -t $FRONTEND_REPO ./frontend
+          docker tag $FRONTEND_REPO:latest $ECR_REGISTRY/$FRONTEND_REPO:latest
 
-  #     - name: Push Images
-  #       run: |
-  #         docker push $ECR_REGISTRY/$BACKEND_REPO:latest
-  #         docker push $ECR_REGISTRY/$FRONTEND_REPO:latest
+      - name: Push Images
+        run: |
+          docker push $ECR_REGISTRY/$BACKEND_REPO:latest
+          docker push $ECR_REGISTRY/$FRONTEND_REPO:latest
 
 
-  # deploy-to-ec2:
-  #   name: Deploy on EC2 using Docker
-  #   runs-on: ubuntu-latest
-  #   needs: 
-  #     - build-and-push
-  #     - deploy-infra
+  deploy-to-ec2:
+    name: Deploy on EC2 using Docker
+    runs-on: ubuntu-latest
+    needs: 
+      - build-and-push
+      - deploy-infra
 
-  #   steps:
-  #     - name: Debug Outputs
-  #       run: |
-  #        echo "EC2_IP=${{ needs.deploy-infra.outputs.ec2_ip }}"
-  #        echo "RDS_ENDPOINT=${{ needs.deploy-infra.outputs.rds_endpoint }}"
+    steps:
+      - name: Debug Outputs
+        run: |
+         echo "EC2_IP=${{ needs.deploy-infra.outputs.ec2_ip }}"
+         echo "RDS_ENDPOINT=${{ needs.deploy-infra.outputs.rds_endpoint }}"
 
 
 
     
-  #     - name: Deploy via SSH
-  #       uses: appleboy/ssh-action@v1
-  #       with:
-  #         host: ${{ needs.deploy-infra.outputs.ec2_ip }}
-  #         username: ubuntu
-  #         key: ${{ secrets.EC2_SSH_KEY }}
-  #         script: |
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ needs.deploy-infra.outputs.ec2_ip }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
 
-  #           echo "Logging into ECR..."
-  #           aws ecr get-login-password --region us-east-1 | \
-  #           sudo docker login --username AWS --password-stdin 160900807677.dkr.ecr.us-east-1.amazonaws.com
+            echo "Logging into ECR..."
+            aws ecr get-login-password --region us-east-1 | \
+            sudo docker login --username AWS --password-stdin 160900807677.dkr.ecr.us-east-1.amazonaws.com
 
-  #           echo "Pulling latest images..."
-  #           sudo docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/backend:latest
-  #           sudo docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
+            echo "Pulling latest images..."
+            sudo docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/backend:latest
+            sudo docker pull 160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
 
-  #           echo "Deleting old containers..."
-  #           sudo docker rm -f backend frontend || true
-  #           sudo docker network create mynet || true
+            echo "Deleting old containers..."
+            sudo docker rm -f backend frontend || true
+            sudo docker network create mynet || true
 
-  #           echo "Running backend..."
-  #           sudo docker run -d \
-  #             --name backend \
-  #             --network mynet \
-  #             -p 5000:5000 \
-  #             -e DB_HOST=${{ needs.deploy-infra.outputs.rds_endpoint }} \
-  #             -e DB_NAME=student_registration \
-  #             -e DB_USER=root \
-  #             -e DB_PASSWORD=password123 \
-  #             160900807677.dkr.ecr.us-east-1.amazonaws.com/backend:latest
+            echo "Running backend..."
+            sudo docker run -d \
+              --name backend \
+              --network mynet \
+              -p 5000:5000 \
+              -e DB_HOST=${{ needs.deploy-infra.outputs.rds_endpoint }} \
+              -e DB_NAME=student_registration \
+              -e DB_USER=root \
+              -e DB_PASSWORD=password123 \
+              160900807677.dkr.ecr.us-east-1.amazonaws.com/backend:latest
 
-  #           echo "Running frontend..."
-  #           sudo docker run -d \
-  #             --name frontend \
-  #             --network mynet \
-  #             -p 80:80 \
-  #             160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
+            echo "Running frontend..."
+            sudo docker run -d \
+              --name frontend \
+              --network mynet \
+              -p 80:80 \
+              160900807677.dkr.ecr.us-east-1.amazonaws.com/frontend:latest
