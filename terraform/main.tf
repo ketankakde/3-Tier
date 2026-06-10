@@ -9,8 +9,6 @@ module "iam" {
 module "eks" {
   source = "./modules/eks"
 
-  cluster_name = "git-ops-cluster"
-
   cluster_role_arn = module.iam.cluster_role_arn
   node_role_arn    = module.iam.node_role_arn
 
