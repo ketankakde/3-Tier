@@ -1,16 +1,5 @@
 module "vpc" {
   source = "./modules/vpc"
-
-  cidr_block = var.cidr_block
-
-  pub_1_cidr = var.pub_1_cidr
-  pub_2_cidr = var.pub_2_cidr
-
-  pri_1_cidr = var.pri_1_cidr
-  pri_2_cidr = var.pri_2_cidr
-
-  az_1 = var.az_1
-  az_2 = var.az_2
 }
 
 module "iam" {
@@ -20,7 +9,7 @@ module "iam" {
 module "eks" {
   source = "./modules/eks"
 
-  cluster_name = "my-eks"
+  cluster_name = "git-ops-cluster"
 
   cluster_role_arn = module.iam.cluster_role_arn
   node_role_arn    = module.iam.node_role_arn
