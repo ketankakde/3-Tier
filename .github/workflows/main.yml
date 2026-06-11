@@ -7,6 +7,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+     id-token: write
+     contents: read    
+
     env:
       AWS_REGION: us-east-1
       CLUSTER_NAME: git-ops-cluster
