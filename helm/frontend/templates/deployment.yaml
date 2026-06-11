@@ -16,13 +16,13 @@ spec:
       - name: wait-for-backend
         image: busybox
         command:
-        - sh
-        - -c
-        - |
-          until nc -z backend 5000; do
-            echo "Waiting for Backend..."
-            sleep 5
-          done
+          - sh
+          - -c
+          - |
+            until nc -z backend 5000; do
+              echo "Waiting for Backend..."
+              sleep 5
+            done
       containers:
         - name: frontend
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
