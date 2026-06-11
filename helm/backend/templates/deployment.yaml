@@ -12,6 +12,17 @@ spec:
       labels:
         app: backend
     spec:
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox
+        command:
+          - sh
+          - -c
+          - |
+            until nc -z mysql 3306; do
+              echo "Waiting for MySQL..."
+              sleep 5
+            done
       containers:
         - name: backend
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
