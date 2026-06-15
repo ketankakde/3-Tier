@@ -5,7 +5,7 @@ metadata:
   labels:
     app: mysql
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: mysql
@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: mysql:8.0
+          image: {{ .Values.image.repository }}
+          tag: {{ .Values.image.tag }}
           imagePullPolicy: IfNotPresent
 
           ports:
