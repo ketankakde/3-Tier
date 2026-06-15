@@ -14,8 +14,7 @@ module "eks" {
 
   private_subnet_ids = [
     module.vpc.private_subnet_1_id,
-    module.vpc.private_subnet_2_id
-  ]
+    module.vpc.private_subnet_2_id ]
 
   cluster_policy_attachment = module.iam.cluster_role_arn
 
