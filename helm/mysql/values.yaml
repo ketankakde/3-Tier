@@ -57,7 +57,7 @@ service:
   port: 3306
 
 mysql:
-  rootPassword: rootpass
+  rootPassword: password123
   user: appuser
   database: student_registration
   password: password123
