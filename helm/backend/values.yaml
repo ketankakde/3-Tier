@@ -60,7 +60,7 @@ env:
   DB_HOST: mysql
   DB_PORT: "3306"
   DB_NAME: student_registration
-  DB_USER: root
+  DB_USER: appuser
   DB_PASSWORD: password123    
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
