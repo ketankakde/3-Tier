@@ -103,11 +103,14 @@ jobs:
         kubectl get svc
 
     - name: Install Argo CD
-      if: ${{ github.event.inputs.action == 'create' }}
       run: |
+        helm repo add argo https://argoproj.github.io/argo-helm
+        helm repo update
+
         kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-        kubectl apply -n argocd \
-        -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+        helm upgrade --install argocd argo/argo-cd \
+        --namespace argocd
 
     - name: Wait for Argo CD
       if: ${{ github.event.inputs.action == 'create' }}
@@ -116,7 +119,7 @@ jobs:
         --for=condition=available \
         deployment/argocd-server \
         -n argocd \
-        --timeout=300s
+        --timeout=600s
 
     - name: Expose Argo CD
       if: ${{ github.event.inputs.action == 'create' }}
