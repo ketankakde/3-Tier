@@ -88,13 +88,13 @@ jobs:
       if: ${{ github.event.inputs.action == 'create' }}
       run: |
         helm upgrade --install backend ./helm/backend \
-          --set image.tag=${{ github.sha }}
+          --set image.tag=latest
 
     - name: Deploy Frontend
       if: ${{ github.event.inputs.action == 'create' }}
       run: |
         helm upgrade --install frontend ./helm/frontend \
-          --set image.tag=${{ github.sha }}
+          --set image.tag=latest
 
     - name: Verify Pods
       if: ${{ github.event.inputs.action == 'create' }}
