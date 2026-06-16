@@ -103,6 +103,7 @@ jobs:
         kubectl get svc
 
     - name: Install Argo CD
+      if: ${{ github.event.inputs.action == 'create' }}
       run: |
         helm repo add argo https://argoproj.github.io/argo-helm
         helm repo update
