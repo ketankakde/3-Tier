@@ -5,11 +5,13 @@ metadata:
   labels:
     app: mysql
 spec:
-  type: ClusterIP
+  clusterIP: None   # Headless Service
+
   ports:
     - port: {{ .Values.service.port }}
       targetPort: 3306
       protocol: TCP
       name: mysql
+
   selector:
     app: mysql
