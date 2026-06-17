@@ -62,8 +62,6 @@ jobs:
       run: |
         kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
-          
-
     - name: Install Helm
       if: ${{ github.event.inputs.action == 'create' }}
       run: |
