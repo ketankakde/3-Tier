@@ -14,6 +14,7 @@ spec:
       labels:
         app: mysql
     spec:
+      serviceName: mysql
       containers:
         - name: mysql
           image: {{ .Values.image.repository }}
