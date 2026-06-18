@@ -33,4 +33,4 @@ spec:
 
           env:
             - name: API_URL
-              value: {{ .Values.env.API_URL | quote }}
+              value: {{ .Values.env.API_URL | default "/api" }}
