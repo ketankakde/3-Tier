@@ -62,8 +62,8 @@ pipeline {
                 )]) {
 
                     sh '''
-                    git clone https://$GIT_USER:$GIT_PASS@github.com/ketankakde/eks-helm-argo-cd-project.git gitops
-                    cd gitops/helm
+                    git clone https://$GIT_USER:$GIT_PASS@github.com/ketankakde/eks-helm-argo-cd-project.git
+                    cd helm
 
                     # update frontend tag
                     sed -i "s|tag:.*|tag: \"$IMAGE_TAG\"|g" frontend/values.yaml
