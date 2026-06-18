@@ -5,11 +5,13 @@ pipeline {
         FRONTEND_IMAGE = "ketanops/frontend"
         BACKEND_IMAGE  = "ketanops/backend"
         IMAGE_TAG      = "${BUILD_NUMBER}"
+
+        GITOPS_REPO = "https://github.com/ketankakde/eks-helm-argo-cd-project.git"
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout App Code') {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/ketankakde/eks-helm-argo-cd-project.git'
@@ -50,11 +52,43 @@ pipeline {
                 '''
             }
         }
+
+        stage('Update GitOps Repo (ArgoCD Trigger)') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-creds',
+                    usernameVariable: 'GIT_USER',
+                    passwordVariable: 'GIT_PASS'
+                )]) {
+
+                    sh '''
+                    git clone https://$GIT_USER:$GIT_PASS@github.com/ketankakde/eks-helm-argo-cd-project.git gitops
+                    cd gitops/helm
+
+                    # update frontend tag
+                    sed -i "s|tag:.*|tag: \"$IMAGE_TAG\"|g" frontend/values.yaml
+
+                    # update backend tag
+                    sed -i "s|tag:.*|tag: \"$IMAGE_TAG\"|g" backend/values.yaml
+
+                    git config user.name "jenkins"
+                    git config user.email "jenkins@ci.com"
+
+                    git add .
+                    git commit -m "Update image tag to $IMAGE_TAG"
+                    git push origin main
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo 'Images pushed successfully'
+            echo 'CI + CD Pipeline completed successfully 🚀'
+        }
+        failure {
+            echo 'Pipeline failed ❌'
         }
     }
 }
