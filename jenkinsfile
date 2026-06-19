@@ -62,6 +62,7 @@ pipeline {
                 )]) {
 
                     sh '''
+                    rm -rf eks-helm-argo-cd-project
                     git clone https://$GIT_USER:$GIT_PASS@github.com/ketankakde/eks-helm-argo-cd-project.git
 
                     cd eks-helm-argo-cd-project/helm
