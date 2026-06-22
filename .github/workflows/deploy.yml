@@ -13,7 +13,7 @@ jobs:
       
     env:
       AWS_REGION: us-east-1 
-      CLUSTER_NAME: git-ops-cluster
+      CLUSTER_NAME: project-cluster
       IMAGE_TAG: ${{ github.sha }}
       
     steps:
