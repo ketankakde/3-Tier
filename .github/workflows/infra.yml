@@ -1,0 +1,131 @@
+name: EKS-Infra
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform Action (create or destroy)"
+        required: true
+        default: "create"
+        type: choice
+        options:
+          - create
+          - destroy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read    
+
+    env:
+      AWS_REGION: us-east-1
+      CLUSTER_NAME: git-ops-cluster
+
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::160900807677:role/role-for-github-actions
+        aws-region: us-east-1
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init
+      working-directory: terraform
+      run: terraform init
+
+    - name: Terraform Validate
+      working-directory: terraform
+      run: terraform validate
+
+    - name: Terraform Apply
+      if: ${{ github.event.inputs.action == 'create' }}
+      working-directory: terraform
+      run: terraform apply -auto-approve
+
+    - name: Configure kubectl
+      if: ${{ github.event.inputs.action == 'create' }}
+      run: |
+        aws eks update-kubeconfig \
+          --region $AWS_REGION \
+          --name $CLUSTER_NAME
+    
+    - name: Install Helm
+      if: ${{ github.event.inputs.action == 'create' }}
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+    - name: Install ARC Controller
+      run: |
+        helm install arc \
+        oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller \
+        --namespace arc-systems \
+        --create-namespace
+
+    - name: Wait for ARC Controller
+      run: |
+        kubectl wait \
+        --for=condition=available \
+        deployment/arc-gha-rs-controller \
+        -n arc-systems \
+        --timeout=300s    
+ 
+    - name: Install ARC Runner Scale Set
+      run: |
+        helm install arc-runner-set \
+        oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set \
+        --namespace arc-runners \
+        --create-namespace \
+        --set githubConfigUrl=https://github.com/ketankakde/eks-helm-argo-cd-project \
+        --set githubConfigSecret.github_token=${{ secrets.PAT }}    
+
+    - name: Install Argo CD
+      if: ${{ github.event.inputs.action == 'create' }}
+      run: |
+        helm repo add argo https://argoproj.github.io/argo-helm
+        helm repo update
+
+        kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+
+        helm upgrade --install argocd argo/argo-cd \
+        --namespace argocd
+
+    - name: Wait for Argo CD
+      if: ${{ github.event.inputs.action == 'create' }}
+      run: |
+        kubectl wait \
+        --for=condition=available \
+        deployment/argocd-server \
+        -n argocd \
+        --timeout=600s
+
+    - name: Expose Argo CD
+      if: ${{ github.event.inputs.action == 'create' }}
+      run: |
+        kubectl patch svc argocd-server -n argocd \
+        -p '{"spec":{"type":"NodePort"}}'
+
+    - name: Show Argo CD Port
+      if: ${{ github.event.inputs.action == 'create' }}
+      run: |
+        kubectl get svc argocd-server -n argocd
+
+    - name: Show Argo CD Admin Password
+      if: ${{ github.event.inputs.action == 'create' }}
+      run: |
+        kubectl -n argocd get secret argocd-initial-admin-secret \
+        -o jsonpath="{.data.password}" | base64 -d
+        echo    
+
+    - name: Terraform Destroy
+      if: ${{ github.event.inputs.action == 'destroy' }}
+      working-directory: terraform
+      run: terraform destroy -auto-approve
