@@ -131,7 +131,7 @@ jobs:
       if: ${{ github.event.inputs.action == 'create' }}
       run: |
         kubectl patch svc argocd-server -n argocd \
-        -p '{"spec":{"type":"LoadBalancer"}}'
+        -p '{"spec":{"type":"NodePort"}}'
 
     - name: Show Argo CD URL
       if: ${{ github.event.inputs.action == 'create' }}
