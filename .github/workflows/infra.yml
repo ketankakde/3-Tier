@@ -84,7 +84,7 @@ jobs:
         oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set \
         --namespace arc-runners \
         --create-namespace \
-        --set githubConfigUrl=https://github.com/ketankakde/eks-helm-argo-cd-project \
+        --set githubConfigUrl=https://github.com/ketankakde/eks-ci-cd-project \
         --set githubConfigSecret.github_token=${{ secrets.PAT }}    
 
     - name: Install Argo CD
