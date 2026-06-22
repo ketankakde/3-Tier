@@ -1,0 +1,58 @@
+name: Deploy
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  deploy:
+    runs-on: arc-runner-set
+
+    permissions:
+      id-token: write
+      contents: read
+      
+    env:
+      AWS_REGION: us-east-1 
+      CLUSTER_NAME: git-ops-cluster
+      IMAGE_TAG: ${{ github.sha }}
+      
+    steps:
+
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::160900807677:role/role-for-github-actions
+        aws-region: us-east-1  
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+       username: ${{ secrets.DOCKER_USERNAME }}
+       password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build Images
+      run: |
+        docker build -t ketanops/backend:${IMAGE_TAG} ./backend
+        docker build -t ketanops/frontend:${IMAGE_TAG} ./frontend
+
+    - name: Push Images
+      run: |
+        docker push ketanops/backend:${IMAGE_TAG}
+        docker push ketanops/frontend:${IMAGE_TAG}
+
+    - name: Configure kubectl 
+      run: | 
+        aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+    - name: Install Helm
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash    
+
+    - name: Deploy 3-Tier
+      run: |
+         helm upgrade --install mysql ./helm/mysql
+         helm upgrade --install backend ./helm/backend --set image.tag=${IMAGE_TAG}
+         helm upgrade --install frontend ./helm/frontend --set image.tag=${IMAGE_TAG}
